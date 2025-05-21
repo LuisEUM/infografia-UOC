@@ -169,6 +169,8 @@ export function ContinentClient({ continent }: ContinentClientProps) {
               selectedCountries={selectedCountries}
               visibleContinents={[continentName]}
               availableContinents={availableContinents}
+              rankingLimit={rankingLimit}
+              colorMode="multi"
             />
           </div>
 
@@ -234,6 +236,9 @@ export function ContinentClient({ continent }: ContinentClientProps) {
             onCountrySelect={handleCountrySelect}
             selectedCountries={selectedCountries}
             continent={continentName}
+            showEyeIcons={false}
+            maxSelectedCountries={5}
+            onCountryHover={() => {}}
           />
         </div>
       </div>

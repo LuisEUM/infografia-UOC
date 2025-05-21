@@ -171,6 +171,8 @@ export default function ContinentPage({ params }: ContinentPageProps) {
               selectedCountries={selectedCountries}
               visibleContinents={[continentName]}
               availableContinents={availableContinents}
+              rankingLimit={rankingLimit}
+              colorMode="multi"
             />
           </div>
 
@@ -236,6 +238,9 @@ export default function ContinentPage({ params }: ContinentPageProps) {
             onCountrySelect={handleCountrySelect}
             selectedCountries={selectedCountries}
             continent={continentName}
+            showEyeIcons={false}
+            maxSelectedCountries={5}
+            onCountryHover={() => {}}
           />
         </div>
       </div>

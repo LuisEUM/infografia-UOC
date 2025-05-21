@@ -9,7 +9,6 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip,
-  Legend,
   ReferenceLine,
 } from "recharts";
 import {
@@ -17,11 +16,7 @@ import {
   DataVariable,
   getTimeSeriesData,
 } from "@/app/data/dataUtils";
-import {
-  CONTINENT_COLORS,
-  getContinentColor,
-  CYAN_COLOR_SCALE,
-} from "@/app/theme/colorUtils";
+import { CONTINENT_COLORS } from "@/app/theme/colorUtils";
 
 // Tailwind-inspired colors for the line chart
 const LINE_COLORS = [
@@ -95,7 +90,6 @@ const LineChart = ({
   variable,
   countries,
   yearRange,
-  onYearRangeChange,
   selectedYear,
   showContinentAverages = false,
 }: LineChartProps) => {
@@ -237,17 +231,6 @@ const LineChart = ({
     return colors;
   }, [data, countries, continents, showContinentAverages]);
 
-  // If no data to display
-  if (timeSeriesData.length === 0) {
-    return (
-      <div className="w-full h-[400px] mt-8 flex items-center justify-center bg-gray-50 rounded-lg">
-        <p className="text-gray-500">
-          No hay datos para mostrar. Seleccione países o variables diferentes.
-        </p>
-      </div>
-    );
-  }
-
   // Group legend items by continent for better organization
   const legendItemsByContinent = useMemo(() => {
     const groups: Record<string, { name: string; color: string }[]> = {};
@@ -269,6 +252,17 @@ const LineChart = ({
 
     return groups;
   }, [countries, data, lineColors]);
+
+  // If no data to display
+  if (timeSeriesData.length === 0) {
+    return (
+      <div className="w-full h-[400px] mt-8 flex items-center justify-center bg-gray-50 rounded-lg">
+        <p className="text-gray-500">
+          No hay datos para mostrar. Seleccione países o variables diferentes.
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full mt-8">

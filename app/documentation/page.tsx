@@ -122,7 +122,7 @@ export default function DocumentationPage() {
               South America, Ryukyu Islands y St. Kitts-Nevis-Anguilla
             </li>
             <li>
-              Se agregó la variable "continente" para poder agrupar los valores
+              Se agregó la variable &quot;continente&quot; para poder agrupar los valores
               por esta categoría
             </li>
             <li>
