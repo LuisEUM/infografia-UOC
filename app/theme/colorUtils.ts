@@ -29,8 +29,54 @@ export const CONTINENT_COLORS = {
   },
 };
 
+// Cyan color scale from Tailwind CSS
+export const CYAN_COLOR_SCALE = [
+  "#ecfeff", // cyan-50
+  "#cffafe", // cyan-100
+  "#a5f3fc", // cyan-200
+  "#67e8f9", // cyan-300
+  "#22d3ee", // cyan-400
+  "#06b6d4", // cyan-500
+  "#0891b2", // cyan-600
+  "#0e7490", // cyan-700
+  "#155e75", // cyan-800
+  "#164e63", // cyan-900
+  "#083344", // cyan-950
+];
+
 // Default color for unknown continents
 export const DEFAULT_COLOR = "#CCCCCC";
+
+/**
+ * Get color based on value percentile from the cyan scale
+ * @param value Current value
+ * @param min Minimum value in dataset
+ * @param max Maximum value in dataset
+ * @returns Cyan color hex code
+ */
+export const getCyanColorByPercentile = (
+  value: number,
+  min: number,
+  max: number
+): string => {
+  // Normalize value to 0-1 range
+  const normalizedValue = (value - min) / (max - min || 1);
+
+  // We'll use 5 color buckets (20% each)
+  // Using selected colors from the CYAN_COLOR_SCALE for more contrast
+  const selectedColors = [
+    CYAN_COLOR_SCALE[2], // Lightest - Bottom 20%
+    CYAN_COLOR_SCALE[4], // Light
+    CYAN_COLOR_SCALE[6], // Medium
+    CYAN_COLOR_SCALE[8], // Dark
+    CYAN_COLOR_SCALE[10], // Darkest - Top 20%
+  ];
+
+  // Map normalized value to color index (0-4)
+  const bucketIndex = Math.min(Math.floor(normalizedValue * 5), 4);
+
+  return selectedColors[bucketIndex];
+};
 
 /**
  * Get color based on continent and ranking position

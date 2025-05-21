@@ -14,8 +14,8 @@ interface FiltersPanelProps {
   startYear: number;
   onStartYearChange: (year: number) => void;
 
-  endYear: number | null;
-  onEndYearChange: (year: number | null) => void;
+  endYear: number;
+  onEndYearChange: (year: number) => void;
 
   // Continent/Category selector
   availableContinents: string[];
@@ -72,9 +72,9 @@ const FiltersPanel = ({
 
   // Función para establecer el año fin, puede ser null si no se selecciona
   const handleEndYearChange = (yearValue: string) => {
-    // Si seleccionamos "No aplicar", establecemos endYear como null
+    // Si seleccionamos "No aplicar", establecemos endYear igual a startYear
     if (yearValue === "none") {
-      onEndYearChange(null);
+      onEndYearChange(2019);
       return;
     }
 
@@ -86,7 +86,7 @@ const FiltersPanel = ({
     <div className="bg-white p-4 rounded-lg shadow mb-6">
       <h2 className="text-lg font-semibold mb-4">Filtros</h2>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
         {/* Variable selector */}
         <div>
           <label
@@ -141,7 +141,7 @@ const FiltersPanel = ({
           </label>
           <select
             id="end-year-select"
-            value={endYear === null ? "none" : endYear}
+            value={endYear === null ? "2019" : endYear}
             onChange={(e) => handleEndYearChange(e.target.value)}
             className="block w-full rounded-md border border-gray-300 py-2 px-3 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
           >
@@ -182,10 +182,8 @@ const FiltersPanel = ({
             ))}
           </select>
         </div>
-      </div>
 
-      {/* Second row for ranking and other controls */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* Ranking selector - Moved to first row */}
         <div>
           <label
             htmlFor="ranking-select"

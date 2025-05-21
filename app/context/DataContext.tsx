@@ -31,6 +31,7 @@ interface DataContextType {
 
   selectedCountries: string[];
   setSelectedCountries: (countries: string[]) => void;
+  maxSelectedCountries: number;
 
   // Years range
   availableYears: number[];
@@ -40,8 +41,8 @@ interface DataContextType {
   startYear: number;
   setStartYear: (year: number) => void;
 
-  endYear: number | null;
-  setEndYear: (year: number | null) => void;
+  endYear: number;
+  setEndYear: (year: number) => void;
 
   selectedYear: number;
   setSelectedYear: (year: number) => void;
@@ -52,6 +53,10 @@ interface DataContextType {
   // Rankings
   rankingLimit: number;
   setRankingLimit: (limit: number) => void;
+
+  // Map color mode
+  colorMode: "multi" | "mono";
+  setColorMode: (mode: "multi" | "mono") => void;
 
   // Helper functions
   calculateTotalForVariable: (
@@ -69,18 +74,18 @@ interface DataContextType {
   calculateTotalForVariableRange: (
     variable: DataVariable,
     startYear: number,
-    endYear: number | null,
+    endYear: number,
     continent?: string | null
   ) => number;
   calculateAverageForVariableRange: (
     variable: DataVariable,
     startYear: number,
-    endYear: number | null,
+    endYear: number,
     continent?: string | null
   ) => number;
   getCountryCountForRange: (
     startYear: number,
-    endYear: number | null,
+    endYear: number,
     continent?: string | null
   ) => number;
 
@@ -88,7 +93,7 @@ interface DataContextType {
   calculateStatisticsForVisibleContinents: (
     variable: DataVariable,
     startYear: number,
-    endYear: number | null,
+    endYear: number,
     visibleContinents: string[]
   ) => { total: number; average: number; countries: number };
 }
@@ -107,6 +112,7 @@ const DataContext = createContext<DataContextType>({
 
   selectedCountries: [],
   setSelectedCountries: () => {},
+  maxSelectedCountries: 5,
 
   availableYears: [],
   yearRange: [1949, 2020],
@@ -115,7 +121,7 @@ const DataContext = createContext<DataContextType>({
   startYear: 1949,
   setStartYear: () => {},
 
-  endYear: null,
+  endYear: 2019,
   setEndYear: () => {},
 
   selectedYear: 2018,
@@ -123,8 +129,11 @@ const DataContext = createContext<DataContextType>({
 
   availableContinents: [],
 
-  rankingLimit: 10,
+  rankingLimit: 0,
   setRankingLimit: () => {},
+
+  colorMode: "multi",
+  setColorMode: () => {},
 
   calculateTotalForVariable: () => 0,
   calculateAverageForVariable: () => 0,
@@ -156,55 +165,68 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
   );
   const [selectedCountries, setSelectedCountries] = useState<string[]>([]);
 
+  // Maximum number of countries that can be selected at once
+  const MAX_SELECTED_COUNTRIES = 5;
+
+  // Custom setter for selectedCountries that enforces the maximum limit
+  const handleSetSelectedCountries = (countries: string[]) => {
+    // If the new selection exceeds the maximum, only take the first MAX_SELECTED_COUNTRIES
+    if (countries.length > MAX_SELECTED_COUNTRIES) {
+      setSelectedCountries(countries.slice(0, MAX_SELECTED_COUNTRIES));
+    } else {
+      setSelectedCountries(countries);
+    }
+  };
+
   // Year range state
   const [yearRange, setYearRange] = useState<[number, number]>([1949, 2020]);
   const [startYear, setStartYear] = useState<number>(1949);
-  const [endYear, setEndYear] = useState<number | null>(null);
+  const [endYear, setEndYear] = useState<number>(2019);
   const [selectedYear, setSelectedYear] = useState<number>(2018);
 
   // Ranking state
-  const [rankingLimit, setRankingLimit] = useState<number>(10);
+  const [rankingLimit, setRankingLimit] = useState<number>(0);
 
-  // Load data on mount
+  // Map color mode state
+  const [colorMode, setColorMode] = useState<"multi" | "mono">("multi");
+
+  // Load data when the component mounts
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
         const data = await loadDataset();
-        setAllData(data);
 
-        // Set available years based on data
-        const years = getAvailableYears(data);
+        // Filter out invalid entries
+        const filteredData = data.filter(
+          (item) => item.iso_code && item.iso_code.trim() !== ""
+        );
+
+        setAllData(filteredData);
+
+        // Set available years and continents
+        const years = getAvailableYears(filteredData);
+        const continents = getAvailableContinents(filteredData);
+
         setAvailableYears(years);
-
-        // Set available continents based on data
-        const continents = getAvailableContinents(data);
         setAvailableContinents(continents);
 
-        // Set default year range and selected year based on available data
-        if (years.length > 0) {
-          const minYear = Math.min(...years);
-          const maxYear = Math.max(...years);
-          setYearRange([minYear, maxYear]);
-          setStartYear(minYear);
-          setEndYear(maxYear);
-          setSelectedYear(maxYear);
+        // Initialize selectedCountries as empty array - user must select countries from the ranking
+        setSelectedCountries([]);
 
-          console.log(
-            `Data loaded: ${
-              data.length
-            } records, years: ${minYear}-${maxYear}, continents: ${continents.join(
-              ", "
-            )}`
-          );
+        // Set default years after identifying available years
+        if (years.length > 0) {
+          const maxYear = Math.max(...years);
+          const minYear = Math.min(...years);
+          setYearRange([minYear, maxYear]);
+          setStartYear(maxYear - 5);
+          setSelectedYear(maxYear);
         }
 
         setLoading(false);
       } catch (err) {
-        console.error("Error loading data:", err);
         setError(
-          "Error cargando datos: " +
-            (err instanceof Error ? err.message : String(err))
+          err instanceof Error ? err.message : "Error al cargar los datos"
         );
         setLoading(false);
       }
@@ -276,12 +298,12 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
   const calculateTotalForVariableRange = (
     variable: DataVariable,
     startYear: number,
-    endYear: number | null,
+    endYear: number,
     continent?: string | null
   ): number => {
     // Filter by year range
     let filteredData: CountryData[];
-    if (endYear === null) {
+    if (endYear === startYear) {
       filteredData = allData.filter((item) => item.year === startYear);
     } else {
       filteredData = allData.filter(
@@ -322,12 +344,12 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
   const calculateAverageForVariableRange = (
     variable: DataVariable,
     startYear: number,
-    endYear: number | null,
+    endYear: number,
     continent?: string | null
   ): number => {
     // Filter by year range
     let filteredData: CountryData[];
-    if (endYear === null) {
+    if (endYear === startYear) {
       filteredData = allData.filter((item) => item.year === startYear);
     } else {
       filteredData = allData.filter(
@@ -381,12 +403,12 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
   // Helper function to get the count of unique countries in a date range
   const getCountryCountForRange = (
     startYear: number,
-    endYear: number | null,
+    endYear: number,
     continent?: string | null
   ): number => {
     // Filter by year range
     let filteredData: CountryData[];
-    if (endYear === null) {
+    if (endYear === startYear) {
       filteredData = allData.filter((item) => item.year === startYear);
     } else {
       filteredData = allData.filter(
@@ -410,7 +432,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
   const calculateStatisticsForVisibleContinents = (
     variable: DataVariable,
     startYear: number,
-    endYear: number | null,
+    endYear: number,
     visibleContinents: string[]
   ) => {
     // If no continents are visible or all continents are visible, use all data
@@ -427,7 +449,7 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
 
     // Filter by year range
     let filteredData: CountryData[];
-    if (endYear === null) {
+    if (endYear === startYear) {
       filteredData = allData.filter((item) => item.year === startYear);
     } else {
       filteredData = allData.filter(
@@ -497,7 +519,8 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
     setSelectedContinent,
 
     selectedCountries,
-    setSelectedCountries,
+    setSelectedCountries: handleSetSelectedCountries,
+    maxSelectedCountries: MAX_SELECTED_COUNTRIES,
 
     availableYears,
     yearRange,
@@ -516,6 +539,9 @@ export const DataProvider = ({ children }: { children: ReactNode }) => {
 
     rankingLimit,
     setRankingLimit,
+
+    colorMode,
+    setColorMode,
 
     calculateTotalForVariable,
     calculateAverageForVariable,

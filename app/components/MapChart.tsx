@@ -8,7 +8,11 @@ import {
   ZoomableGroup,
 } from "react-simple-maps";
 import { CountryData, DataVariable } from "@/app/data/dataUtils";
-import { getContinentColor, getColorByRanking } from "@/app/theme/colorUtils";
+import {
+  getContinentColor,
+  getColorByRanking,
+  getCyanColorByPercentile,
+} from "@/app/theme/colorUtils";
 import { feature } from "topojson-client";
 
 // World map TopoJSON
@@ -159,6 +163,7 @@ const ISO_NUMERIC_TO_ALPHA3: Record<string, string> = {
   "566": "NGA", // Nigeria
   "570": "NIU", // Niue
   "578": "NOR", // Norway
+  "583": "FSM", // Micronesia
   "584": "MHL", // Marshall Islands
   "585": "PLW", // Palau
   "586": "PAK", // Pakistan
@@ -226,6 +231,10 @@ const ISO_NUMERIC_TO_ALPHA3: Record<string, string> = {
   "860": "UZB", // Uzbekistan
   "862": "VEN", // Venezuela
   "876": "WLF", // Wallis and Futuna Islands
+  "882": "WSM", // Samoa
+  "887": "YEM", // Yemen
+  "894": "ZMB", // Zambia
+  "926": "OWID_KOS", // Kosovo
 };
 
 interface GeoGeometry {
@@ -283,6 +292,11 @@ interface MapChartProps {
   selectedCountries: string[];
   visibleContinents?: string[];
   availableContinents: string[];
+  rankingLimit: number;
+  hoveredCountry?: string | null;
+  onCountryHover?: (countryCode: string | null) => void;
+  colorMode: "multi" | "mono";
+  onValueRangeChange?: (range: { min: number; max: number }) => void;
 }
 
 // Interface para el resultado de moveEnd
@@ -300,6 +314,11 @@ const MapChart = ({
   selectedCountries = [],
   visibleContinents = [],
   availableContinents,
+  rankingLimit,
+  hoveredCountry = null,
+  onCountryHover,
+  colorMode,
+  onValueRangeChange,
 }: MapChartProps) => {
   const mapContainerRef = useRef<HTMLDivElement>(null);
   const [tooltipContent, setTooltipContent] = useState<{
@@ -317,15 +336,15 @@ const MapChart = ({
     matched: number;
   }>({ total: 0, matched: 0 });
 
+  // Constantes para los límites de zoom
+  const MIN_ZOOM = 1; // Increase the minimum zoom level to prevent extreme zoom out
+  const MAX_ZOOM = 8;
+
   // Estado para el zoom del mapa
   const [position, setPosition] = useState<MapPosition>({
     coordinates: [0, 30],
-    zoom: 1,
+    zoom: MIN_ZOOM, // Start at minimum zoom (maximum zoom out)
   });
-
-  // Constantes para los límites de zoom
-  const MIN_ZOOM = 0.5;
-  const MAX_ZOOM = 8;
 
   // Función para cambiar el zoom
   const handleZoomIn = () => {
@@ -483,6 +502,68 @@ const MapChart = ({
     };
   }, [countryDataByCode, variable, availableContinents]);
 
+  // Notify parent component about min/max value changes
+  useEffect(() => {
+    if (onValueRangeChange) {
+      onValueRangeChange({ min, max });
+    }
+  }, [min, max, onValueRangeChange]);
+
+  // Get top N countries for the current variable
+  const topCountries = useMemo(() => {
+    if (rankingLimit === 0) {
+      return null; // No limit, show all countries
+    }
+
+    // Primero, agrupamos los datos por país para tener un valor promedio
+    const countryValues: Record<string, { code: string; value: number }> = {};
+
+    // Procesamos los datos para cada país
+    Object.entries(countryDataByCode).forEach(([code, country]) => {
+      // Solo considerar países en continentes visibles
+      if (visibleContinents.length > 0 && country.continent) {
+        if (!visibleContinents.includes(country.continent)) {
+          return;
+        }
+      }
+
+      // Obtener el valor para la variable seleccionada
+      const value =
+        typeof country[variable] === "number"
+          ? (country[variable] as number)
+          : 0;
+
+      // Solo considerar países con valores positivos
+      if (value > 0) {
+        countryValues[code] = {
+          code,
+          value,
+        };
+      }
+    });
+
+    // Ordenar países por valor (mayor a menor)
+    const sortedCountries = Object.values(countryValues).sort(
+      (a, b) => b.value - a.value
+    );
+
+    // Tomar solo los primeros N países
+    return sortedCountries
+      .slice(0, rankingLimit)
+      .map((country) => country.code);
+  }, [countryDataByCode, rankingLimit, variable, visibleContinents]);
+
+  // Function to determine if a country should be shown based on ranking
+  const shouldShowCountry = (countryCode: string) => {
+    // Si no hay límite de ranking, mostrar todos los países
+    if (rankingLimit === 0 || !topCountries) {
+      return true;
+    }
+
+    // Mostrar solo los países top
+    return topCountries.includes(countryCode);
+  };
+
   // Load and process map data
   useEffect(() => {
     const countryISOsInData = Object.keys(countryDataByCode);
@@ -576,10 +657,20 @@ const MapChart = ({
         countryIso: iso,
       });
     }
+
+    // Llamar al callback si existe
+    if (onCountryHover && iso) {
+      onCountryHover(iso);
+    }
   };
 
   const handleCountryLeave = () => {
     setTooltipContent((prev) => ({ ...prev, visible: false }));
+
+    // Llamar al callback si existe
+    if (onCountryHover) {
+      onCountryHover(null);
+    }
   };
 
   // Crear título con el rango de años apropiado
@@ -629,10 +720,15 @@ const MapChart = ({
           </svg>
         </button>
         <button
-          className="bg-white p-2 rounded-full shadow-md hover:bg-gray-100 focus:outline-none"
+          className={`bg-white p-2 rounded-full shadow-md hover:bg-gray-100 focus:outline-none ${
+            position.zoom <= MIN_ZOOM ? "opacity-50 cursor-not-allowed" : ""
+          }`}
           onClick={handleZoomOut}
-          aria-label="Alejar"
-          title="Alejar"
+          disabled={position.zoom <= MIN_ZOOM}
+          aria-label={
+            position.zoom <= MIN_ZOOM ? "Zoom mínimo alcanzado" : "Alejar"
+          }
+          title={position.zoom <= MIN_ZOOM ? "Zoom mínimo alcanzado" : "Alejar"}
         >
           <svg
             xmlns="http://www.w3.org/2000/svg"
@@ -654,6 +750,11 @@ const MapChart = ({
       <div className="absolute left-4 top-4 z-10">
         <h3 className="text-lg font-medium text-gray-700">
           {variableLabels[variable]} {yearRangeTitle}
+          {rankingLimit > 0 && (
+            <span className="ml-2 px-2 py-1 text-sm bg-blue-100 text-blue-800 rounded-full">
+              Top {rankingLimit} países
+            </span>
+          )}
         </h3>
       </div>
 
@@ -680,6 +781,7 @@ const MapChart = ({
                 const iso = getCountryIsoCode(geoFeature);
                 const countryData = iso ? countryDataByCode[iso] : null;
                 const isSelected = selectedCountries.includes(iso);
+                const isHovered = hoveredCountry === iso;
 
                 // Generate a unique key for each geography
                 const geoKey =
@@ -711,35 +813,42 @@ const MapChart = ({
                       visibleContinents.includes(countryData.continent);
 
                     if (isVisible) {
-                      // Get continent-specific ranking for this country
-                      const continentRanking =
-                        countriesByRank[countryData.continent];
-                      const countryRank = continentRanking
-                        ? continentRanking[iso]
-                        : 0;
-                      const totalCountriesInContinent = continentRanking
-                        ? Object.keys(continentRanking).length
-                        : 0;
-
-                      // Use ranking-based color instead of just continent base color
-                      if (countryRank && totalCountriesInContinent) {
-                        fillColor = getColorByRanking(
-                          countryData.continent,
-                          countryRank,
-                          totalCountriesInContinent
-                        );
-                        fillOpacity = 0.9; // Use high opacity for all ranked countries
+                      if (colorMode === "mono") {
+                        // Mono-color mode (cyan gradient)
+                        fillColor = getCyanColorByPercentile(value, min, max);
+                        fillOpacity = 0.9;
                       } else {
-                        // Fallback to continent color with opacity based on value
-                        fillColor = getContinentColor(countryData.continent);
+                        // Multi-color mode (continent-based colors)
+                        // Get continent-specific ranking for this country
+                        const continentRanking =
+                          countriesByRank[countryData.continent];
+                        const countryRank = continentRanking
+                          ? continentRanking[iso]
+                          : 0;
+                        const totalCountriesInContinent = continentRanking
+                          ? Object.keys(continentRanking).length
+                          : 0;
 
-                        // Apply opacity based on the variable value
-                        const normalizedValue =
-                          (value - min) / (max - min || 1);
-                        fillOpacity = Math.max(
-                          0.3,
-                          normalizedValue * 0.7 + 0.3
-                        ); // Range from 0.3 to 1.0
+                        // Use ranking-based color instead of just continent base color
+                        if (countryRank && totalCountriesInContinent) {
+                          fillColor = getColorByRanking(
+                            countryData.continent,
+                            countryRank,
+                            totalCountriesInContinent
+                          );
+                          fillOpacity = 0.9; // Use high opacity for all ranked countries
+                        } else {
+                          // Fallback to continent color with opacity based on value
+                          fillColor = getContinentColor(countryData.continent);
+
+                          // Apply opacity based on the variable value
+                          const normalizedValue =
+                            (value - min) / (max - min || 1);
+                          fillOpacity = Math.max(
+                            0.3,
+                            normalizedValue * 0.7 + 0.3
+                          ); // Range from 0.3 to 1.0
+                        }
                       }
                     } else {
                       // If continent is not visible, use a very light gray
@@ -749,43 +858,54 @@ const MapChart = ({
                   }
                 }
 
+                // Si el país no está en el top N, mostrarlo en gris claro y no interactivo
+                const isInTop = shouldShowCountry(iso);
+                if (!isInTop) {
+                  fillColor = "#EEEEEE";
+                  fillOpacity = 0.3;
+                }
+
                 return (
                   <Geography
                     key={geoKey}
                     geography={geo}
-                    onClick={() => iso && onCountrySelect(iso)}
+                    onClick={() => isInTop && iso && onCountrySelect(iso)}
                     onMouseEnter={(e: MapMouseEvent) =>
-                      handleCountryHover(geoFeature, e)
+                      isInTop ? handleCountryHover(geoFeature, e) : null
                     }
                     onMouseLeave={handleCountryLeave}
                     style={{
                       default: {
                         fill: fillColor,
-                        fillOpacity,
-                        stroke: "#FFFFFF",
-                        strokeWidth: 0.5,
+                        fillOpacity: isHovered && isInTop ? 1 : fillOpacity,
+                        stroke: isHovered && isInTop ? "#000000" : "#FFFFFF",
+                        strokeWidth: isHovered && isInTop ? 1 : 0.5,
                         outline: "none",
                       },
                       hover: {
-                        fill: isSelected
+                        fill: !isInTop
+                          ? fillColor
+                          : isSelected
                           ? "#3F51B5"
                           : countryData
                           ? "#F53"
                           : "#F5F5F5",
-                        fillOpacity: 1,
+                        fillOpacity: !isInTop ? fillOpacity : 1,
                         stroke: "#FFFFFF",
-                        strokeWidth: 0.75,
+                        strokeWidth: isInTop ? 0.75 : 0.5,
                         outline: "none",
                       },
                       pressed: {
-                        fill: isSelected
+                        fill: !isInTop
+                          ? fillColor
+                          : isSelected
                           ? "#3F51B5"
                           : countryData
                           ? "#E42"
                           : "#C9C9C9",
-                        fillOpacity: 1,
+                        fillOpacity: !isInTop ? fillOpacity : 1,
                         stroke: "#FFFFFF",
-                        strokeWidth: 1,
+                        strokeWidth: isInTop ? 1 : 0.5,
                         outline: "none",
                       },
                     }}

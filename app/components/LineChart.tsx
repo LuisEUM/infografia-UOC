@@ -10,7 +10,6 @@ import {
   CartesianGrid,
   Tooltip,
   Legend,
-  Brush,
   ReferenceLine,
 } from "recharts";
 import {
@@ -18,7 +17,20 @@ import {
   DataVariable,
   getTimeSeriesData,
 } from "@/app/data/dataUtils";
-import { CONTINENT_COLORS, getContinentColor } from "@/app/theme/colorUtils";
+import {
+  CONTINENT_COLORS,
+  getContinentColor,
+  CYAN_COLOR_SCALE,
+} from "@/app/theme/colorUtils";
+
+// Tailwind-inspired colors for the line chart
+const LINE_COLORS = [
+  "#10b981", // emerald-500 (green)
+  "#3b82f6", // blue-500 (blue)
+  "#8b5cf6", // violet-500 (purple)
+  "#ef4444", // red-500 (red)
+  "#f59e0b", // amber-500 (yellow/orange)
+];
 
 interface LineChartProps {
   data: CountryData[];
@@ -201,11 +213,13 @@ const LineChart = ({
   const lineColors = useMemo(() => {
     const colors: Record<string, string> = {};
 
-    // Country colors
-    countries.forEach((iso) => {
+    // Country colors - use Tailwind-inspired colors
+    countries.forEach((iso, index) => {
       const countryData = data.find((d) => d.iso_code === iso);
       if (countryData) {
-        colors[countryData.country] = getContinentColor(countryData.continent);
+        // Use mod to cycle through colors if we have more countries than colors
+        const colorIndex = index % LINE_COLORS.length;
+        colors[countryData.country] = LINE_COLORS[colorIndex];
       } else {
         colors[iso] = "#999999";
       }
@@ -223,24 +237,6 @@ const LineChart = ({
     return colors;
   }, [data, countries, continents, showContinentAverages]);
 
-  // Handle brush change
-  const handleBrushChange = (brushRange: {
-    startIndex?: number;
-    endIndex?: number;
-  }) => {
-    if (
-      brushRange &&
-      typeof brushRange.startIndex === "number" &&
-      typeof brushRange.endIndex === "number" &&
-      timeSeriesData[brushRange.startIndex] &&
-      timeSeriesData[brushRange.endIndex]
-    ) {
-      const newStartYear = timeSeriesData[brushRange.startIndex].year;
-      const newEndYear = timeSeriesData[brushRange.endIndex].year;
-      onYearRangeChange([newStartYear, newEndYear]);
-    }
-  };
-
   // If no data to display
   if (timeSeriesData.length === 0) {
     return (
@@ -252,85 +248,124 @@ const LineChart = ({
     );
   }
 
+  // Group legend items by continent for better organization
+  const legendItemsByContinent = useMemo(() => {
+    const groups: Record<string, { name: string; color: string }[]> = {};
+
+    // Group countries by continent
+    countries.forEach((iso) => {
+      const countryData = data.find((d) => d.iso_code === iso);
+      if (countryData) {
+        const continent = countryData.continent || "Otro";
+        if (!groups[continent]) {
+          groups[continent] = [];
+        }
+        groups[continent].push({
+          name: countryData.country,
+          color: lineColors[countryData.country] || "#999999",
+        });
+      }
+    });
+
+    return groups;
+  }, [countries, data, lineColors]);
+
   return (
-    <div className="w-full h-[400px] mt-8">
+    <div className="w-full mt-8">
       <h3 className="text-lg font-medium mb-2">
         {variableLabels[variable]} (evolución temporal)
       </h3>
 
-      <ResponsiveContainer width="100%" height="100%">
-        <RechartsLineChart
-          data={timeSeriesData}
-          margin={{ top: 10, right: 30, left: 20, bottom: 30 }}
-        >
-          <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-          <XAxis
-            dataKey="year"
-            label={{ value: "Año", position: "insideBottomRight", offset: -10 }}
-          />
-          <YAxis
-            label={{
-              value: variableLabels[variable],
-              angle: -90,
-              position: "insideLeft",
-              style: { textAnchor: "middle" },
-            }}
-          />
-          <Tooltip
-            content={<CustomTooltip />}
-            labelFormatter={(value) => `Año: ${value}`}
-          />
-          <Legend verticalAlign="top" height={36} />
-
-          {/* Country lines */}
-          {Object.keys(lineColors).map((name) => (
-            <Line
-              key={name}
-              type="monotone"
-              dataKey={name}
-              name={name.startsWith("Promedio ") ? name : name}
-              stroke={lineColors[name]}
-              dot={name.startsWith("Promedio ") ? { r: 0 } : { r: 1 }}
-              activeDot={
-                name.startsWith("Promedio ")
-                  ? { r: 4 }
-                  : { r: 5, strokeWidth: 1 }
-              }
-              strokeWidth={name.startsWith("Promedio ") ? 2 : 1.5}
-              strokeDasharray={name.startsWith("Promedio ") ? "5 5" : undefined}
-              connectNulls
-            />
-          ))}
-
-          {selectedYear && (
-            <ReferenceLine
-              x={selectedYear}
-              stroke="#666"
-              strokeDasharray="3 3"
+      <div className="h-[400px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <RechartsLineChart
+            data={timeSeriesData}
+            margin={{ top: 10, right: 30, left: 20, bottom: 30 }}
+          >
+            <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
+            <XAxis
+              dataKey="year"
               label={{
-                value: "Año Seleccionado",
-                position: "top",
-                fill: "#666",
+                value: "Año",
+                position: "insideBottomRight",
+                offset: -10,
               }}
             />
-          )}
+            <YAxis
+              label={{
+                value: variableLabels[variable],
+                angle: -90,
+                position: "insideLeft",
+                style: { textAnchor: "middle" },
+              }}
+            />
+            <Tooltip
+              content={<CustomTooltip />}
+              labelFormatter={(value) => `Año: ${value}`}
+            />
 
-          <Brush
-            dataKey="year"
-            height={30}
-            stroke="#8884d8"
-            onChange={handleBrushChange}
-            startIndex={Math.max(
-              0,
-              timeSeriesData.findIndex((d) => d.year === yearRange[0])
+            {/* Country lines */}
+            {Object.keys(lineColors).map((name) => (
+              <Line
+                key={name}
+                type="monotone"
+                dataKey={name}
+                name={name.startsWith("Promedio ") ? name : name}
+                stroke={lineColors[name]}
+                dot={name.startsWith("Promedio ") ? { r: 0 } : { r: 1 }}
+                activeDot={
+                  name.startsWith("Promedio ")
+                    ? { r: 4 }
+                    : { r: 5, strokeWidth: 1 }
+                }
+                strokeWidth={name.startsWith("Promedio ") ? 2 : 1.5}
+                strokeDasharray={
+                  name.startsWith("Promedio ") ? "5 5" : undefined
+                }
+                connectNulls
+              />
+            ))}
+
+            {selectedYear && (
+              <ReferenceLine
+                x={selectedYear}
+                stroke="#666"
+                strokeDasharray="3 3"
+                label={{
+                  value: "Año Seleccionado",
+                  position: "top",
+                  fill: "#666",
+                }}
+              />
             )}
-            endIndex={Math.min(
-              timeSeriesData.length - 1,
-              timeSeriesData.findIndex((d) => d.year === yearRange[1])
-            )}
-          />
-        </RechartsLineChart>
-      </ResponsiveContainer>
+          </RechartsLineChart>
+        </ResponsiveContainer>
+      </div>
+
+      {/* Custom legend area below the chart */}
+      <div className="mt-4 border rounded-md p-3 max-h-[200px] overflow-y-auto">
+        <h4 className="text-sm font-semibold mb-2">Leyenda de países</h4>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2">
+          {Object.entries(legendItemsByContinent).map(([continent, items]) => (
+            <div key={continent} className="space-y-1">
+              <h5 className="text-xs font-semibold text-gray-700">
+                {continent}
+              </h5>
+              {items.map((item) => (
+                <div key={item.name} className="flex items-center text-xs">
+                  <span
+                    className="inline-block w-3 h-3 mr-1 rounded-sm"
+                    style={{ backgroundColor: item.color }}
+                  ></span>
+                  <span className="truncate" title={item.name}>
+                    {item.name}
+                  </span>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   );
 };
