@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import { GeistSans, GeistMono } from "geist/font";
-import { DataProvider } from "./context/DataContext";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -14,9 +13,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es">
-      <body className="min-h-screen bg-background text-foreground antialiased">
-        <DataProvider>{children}</DataProvider>
+    <html lang='es'>
+      <body className='min-h-screen bg-background text-foreground antialiased'>
+        {children}
       </body>
     </html>
   );
