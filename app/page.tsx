@@ -12,7 +12,7 @@ export default function IndexPage() {
       title: "PEC 3 - Selección y rediseño de una mala práctica",
       description:
         "Análisis crítico y propuesta de mejora de visualizaciones de datos existentes, aplicando principios de diseño efectivo.",
-      status: "EN PROGRESO" as const,
+      status: "COMPLETADO" as const,
       href: "/pec3",
       icon: (
         <svg
@@ -139,11 +139,11 @@ export default function IndexPage() {
             <div className='flex justify-center space-x-6 text-sm'>
               <div className='flex items-center'>
                 <div className='w-3 h-3 bg-green-500 rounded-full mr-2'></div>
-                <span className='text-gray-600'>1 Completado</span>
+                <span className='text-gray-600'>2 Completados</span>
               </div>
               <div className='flex items-center'>
                 <div className='w-3 h-3 bg-yellow-500 rounded-full mr-2'></div>
-                <span className='text-gray-600'>2 En Progreso</span>
+                <span className='text-gray-600'>1 En Progreso</span>
               </div>
             </div>
           </div>

@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { GeistSans, GeistMono } from "geist/font";
+import { ThemeProvider } from "next-themes";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -13,9 +14,19 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang='es'>
-      <body className='min-h-screen bg-background text-foreground antialiased'>
-        {children}
+    <html lang='es' suppressHydrationWarning>
+      <body
+        className='min-h-screen bg-background text-foreground antialiased'
+        suppressHydrationWarning
+      >
+        <ThemeProvider
+          attribute='class'
+          defaultTheme='system'
+          enableSystem
+          disableTransitionOnChange
+        >
+          {children}
+        </ThemeProvider>
       </body>
     </html>
   );

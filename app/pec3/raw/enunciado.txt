@@ -1,0 +1,16 @@
+PEC3 Selección y rediseño de una mala práctica
+
+Objetivo
+El principal objetivo de esta actividad es analizar una visualización de datos poco
+correcta, justificar las razones y motivos de que sea una mala práctica de
+visualización e implementar una versión mejorada adaptada para un cliente concreto.
+
+Competencias
+Para lograr el objetivo trabajaremos las siguientes competencias:
+● CG6-Comprender el contexto cultural actual y los movimientos sociales
+relacionados con la cultura digital para imprimir una ética de cultura libre y abierta en
+la práctica del diseño;
+● CE7-Elaborar mensajes teniendo en cuenta el público al que van dirigidos y las
+particularidades del encargo, aplicando un pensamiento estratégico y teniendo en
+cuenta las teorías de la comunicación;
+● CT2-Comunicarse en una lengua extranjera (inglés);

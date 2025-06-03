@@ -6,140 +6,149 @@
 @tailwind components;
 @tailwind utilities;
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
-  --radius-sm: calc(var(--radius) - 4px);
-  --radius-md: calc(var(--radius) - 2px);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) + 4px);
-}
-
 @layer base {
   :root {
-    --background: #ffffff;
-    --foreground: #000000;
-    --card: #ffffff;
-    --card-foreground: #000000;
-    --popover: #ffffff;
-    --popover-foreground: #000000;
-    --primary: #0070f3;
-    --primary-foreground: #ffffff;
-    --secondary: #f5f5f5;
-    --secondary-foreground: #000000;
-    --muted: #f5f5f5;
-    --muted-foreground: #737373;
-    --accent: #f5f5f5;
-    --accent-foreground: #000000;
-    --destructive: #ff4d4f;
-    --destructive-foreground: #ffffff;
-    --border: #e5e5e5;
-    --input: #e5e5e5;
-    --ring: #0070f3;
+    --background: 0 0% 100%;
+    --foreground: 0 0% 0%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 0%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 0%;
 
-    --chart-1: #4ade80;
-    --chart-2: #60a5fa;
-    --chart-3: #f97316;
-    --chart-4: #a855f7;
-    --chart-5: #ec4899;
+    /* Leroy Merlin Verde Principal - PANTONE 368 C */
+    --primary: 84 73% 44%;
+    --primary-foreground: 0 0% 100%;
 
+    /* Leroy Merlin Verde Secundario - PANTONE 381 C */
+    --secondary: 65 100% 43%;
+    --secondary-foreground: 0 0% 0%;
+
+    /* Gris Claro */
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
+
+    /* Acento - PANTONE 372 C */
+    --accent: 72 62% 80%;
+    --accent-foreground: 0 0% 0%;
+
+    /* Rojo - PANTONE 485 C */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 84 73% 44%;
     --radius: 0.5rem;
+
+    --chart-1: 115 54% 76%;
+    --chart-2: 220 70% 50%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+
+    /* Sidebar variables */
+    --sidebar: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
   .dark {
-    --background: #000000;
-    --foreground: #ffffff;
-    --card: #1a1a1a;
-    --card-foreground: #ffffff;
-    --popover: #1a1a1a;
-    --popover-foreground: #ffffff;
-    --primary: #0070f3;
-    --primary-foreground: #ffffff;
-    --secondary: #2d2d2d;
-    --secondary-foreground: #ffffff;
-    --muted: #2d2d2d;
-    --muted-foreground: #a3a3a3;
-    --accent: #2d2d2d;
-    --accent-foreground: #ffffff;
-    --destructive: #ff4d4f;
-    --destructive-foreground: #ffffff;
-    --border: #2d2d2d;
-    --input: #2d2d2d;
-    --ring: #0070f3;
+    --background: 0 0% 10%;
+    --foreground: 0 0% 100%;
+    --card: 0 0% 15%;
+    --card-foreground: 0 0% 100%;
+    --popover: 0 0% 15%;
+    --popover-foreground: 0 0% 100%;
 
-    --chart-1: #22c55e;
-    --chart-2: #3b82f6;
-    --chart-3: #ea580c;
-    --chart-4: #8b5cf6;
-    --chart-5: #d946ef;
+    /* Leroy Merlin Verde Principal - PANTONE 368 C */
+    --primary: 84 73% 44%;
+    --primary-foreground: 0 0% 0%;
+
+    /* Leroy Merlin Verde Secundario - PANTONE 381 C */
+    --secondary: 65 100% 43%;
+    --secondary-foreground: 0 0% 100%;
+
+    /* Gris Oscuro - PANTONE COOL GRAY 11 C */
+    --muted: 0 0% 32%;
+    --muted-foreground: 0 0% 80%;
+
+    /* Acento - PANTONE 372 C */
+    --accent: 72 62% 80%;
+    --accent-foreground: 0 0% 0%;
+
+    /* Rojo - PANTONE 485 C */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 0 0% 25%;
+    --input: 0 0% 25%;
+    --ring: 84 73% 44%;
+
+    --chart-1: 115 54% 76%;
+    --chart-2: 220 70% 50%;
+    --chart-3: 30 80% 55%;
+    --chart-4: 280 65% 60%;
+    --chart-5: 340 75% 55%;
+
+    /* Sidebar variables for dark mode */
+    --sidebar: 240 5.9% 10%;
+    --sidebar-foreground: 240 4.8% 95.9%;
+    --sidebar-primary: 224.3 76.3% 48%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 240 3.7% 15.9%;
+    --sidebar-accent-foreground: 240 4.8% 95.9%;
+    --sidebar-border: 240 3.7% 15.9%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
   }
 }
 
-:root {
-  --sidebar: hsl(0 0% 98%);
-  --sidebar-foreground: hsl(240 5.3% 26.1%);
-  --sidebar-primary: hsl(240 5.9% 10%);
-  --sidebar-primary-foreground: hsl(0 0% 98%);
-  --sidebar-accent: hsl(240 4.8% 95.9%);
-  --sidebar-accent-foreground: hsl(240 5.9% 10%);
-  --sidebar-border: hsl(220 13% 91%);
-  --sidebar-ring: hsl(217.2 91.2% 59.8%);
+/* Estilos personalizados para componentes con colores de Leroy Merlin */
+@layer components {
+  /* Estilos para los tabs */
+  .tabs-leroy-merlin [data-state="active"] {
+    @apply bg-primary text-primary-foreground font-medium;
+  }
+
+  .tabs-leroy-merlin [data-state="inactive"] {
+    @apply hover:bg-primary/10 hover:text-primary;
+  }
+
+  /* Estilos para los botones de toggle */
+  .toggle-leroy-merlin[data-state="on"] {
+    @apply bg-primary text-primary-foreground;
+  }
+
+  /* Estilos para los tooltips */
+  .tooltip-leroy-merlin {
+    @apply border-primary/20 bg-background shadow-md;
+  }
+
+  /* Estilos para los brushes de los gráficos */
+  .brush-leroy-merlin {
+    @apply stroke-primary;
+  }
+
+  /* Estilos para los group-toggle */
+  .group-toggle [data-state="active"] {
+    @apply bg-zinc-100 dark:bg-zinc-800 text-foreground font-medium;
+  }
+
+  .group-toggle [data-state="inactive"] {
+    @apply bg-transparent hover:bg-zinc-100/50 hover:dark:bg-zinc-800/50;
+  }
 }
 
-.dark {
-  --sidebar: hsl(240 5.9% 10%);
-  --sidebar-foreground: hsl(240 4.8% 95.9%);
-  --sidebar-primary: hsl(224.3 76.3% 48%);
-  --sidebar-primary-foreground: hsl(0 0% 100%);
-  --sidebar-accent: hsl(240 3.7% 15.9%);
-  --sidebar-accent-foreground: hsl(240 4.8% 95.9%);
-  --sidebar-border: hsl(240 3.7% 15.9%);
-  --sidebar-ring: hsl(217.2 91.2% 59.8%);
-}
-
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-  }
-}
+/* Fuente: Manual de Marca Leroy Merlin - https://cdn.bndlyr.com/nr1dxae7lw/_assets/elementos_graficos.pdf */
