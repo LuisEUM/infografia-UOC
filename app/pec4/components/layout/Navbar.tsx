@@ -20,17 +20,20 @@ import {
   Menu,
   ChevronDown,
   MapPin,
-  Palette,
+  Sidebar,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface NavbarProps {
   availableContinents?: string[];
+  onSidebarToggle?: () => void;
 }
 
-const Navbar = ({ availableContinents = [] }: NavbarProps) => {
+const Navbar = ({ availableContinents = [], onSidebarToggle }: NavbarProps) => {
   const pathname = usePathname();
   const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
+
+  const isDocumentationPage = pathname.startsWith("/pec4/documentation");
 
   // Navigation items
   const navItems = [
@@ -44,11 +47,6 @@ const Navbar = ({ availableContinents = [] }: NavbarProps) => {
       href: "/pec4/documentation",
       icon: FileText,
     },
-    {
-      name: "Colores",
-      href: "/pec4/theme",
-      icon: Palette,
-    },
   ];
 
   const isActiveLink = (href: string) => {
@@ -59,11 +57,20 @@ const Navbar = ({ availableContinents = [] }: NavbarProps) => {
   };
 
   return (
-    <nav className='bg-white shadow-lg border-b border-gray-200'>
+    <nav className='bg-white shadow-lg border-b border-gray-200 fixed top-0 left-0 right-0 z-30'>
       <div className='max-w-7xl mx-auto px-4 sm:px-6 lg:px-8'>
         <div className='flex justify-between items-center h-16'>
-          {/* Logo/Brand */}
+          {/* Logo/Brand with optional sidebar toggle */}
           <div className='flex items-center flex-shrink-0'>
+            {isDocumentationPage && onSidebarToggle && (
+              <button
+                onClick={onSidebarToggle}
+                className='mr-3 p-2 rounded-md hover:bg-gray-100 lg:hidden'
+                title='Toggle sidebar'
+              >
+                <Sidebar className='w-5 h-5' />
+              </button>
+            )}
             <span className='bg-green-100 text-green-800 text-xs font-medium px-2.5 py-0.5 rounded-full flex items-center'>
               PEC 4
             </span>

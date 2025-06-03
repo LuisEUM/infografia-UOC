@@ -9,7 +9,7 @@ function PEC4LayoutContent({ children }: { children: React.ReactNode }) {
   return (
     <>
       <Navbar availableContinents={loading ? [] : availableContinents} />
-      {children}
+      <div className='pt-16'>{children}</div>
     </>
   );
 }
