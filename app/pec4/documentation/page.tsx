@@ -1,6 +1,6 @@
 "use client";
 
-import React from "react";
+import React, { Suspense } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { DataProcessing } from "./components/DataProcessing";
@@ -17,7 +17,7 @@ import {
   FileText,
 } from "lucide-react";
 
-export default function DocumentationPage() {
+function DocumentationContent() {
   const searchParams = useSearchParams();
   const section = searchParams.get("section");
 
@@ -329,5 +329,44 @@ export default function DocumentationPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+function LoadingFallback() {
+  return (
+    <div className='max-w-6xl mx-auto'>
+      <div className='mb-8'>
+        <div className='h-10 bg-gray-200 rounded animate-pulse mb-4'></div>
+        <div className='h-6 bg-gray-200 rounded animate-pulse mb-6'></div>
+        <div className='flex gap-4 mb-6'>
+          <div className='h-8 w-32 bg-gray-200 rounded-full animate-pulse'></div>
+          <div className='h-8 w-28 bg-gray-200 rounded-full animate-pulse'></div>
+          <div className='h-8 w-24 bg-gray-200 rounded-full animate-pulse'></div>
+        </div>
+      </div>
+      <div className='bg-white rounded-lg shadow-md p-6 mb-8'>
+        <div className='h-8 bg-gray-200 rounded animate-pulse mb-4'></div>
+        <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+          <div className='space-y-4'>
+            <div className='h-4 bg-gray-200 rounded animate-pulse'></div>
+            <div className='h-4 bg-gray-200 rounded animate-pulse'></div>
+            <div className='h-4 bg-gray-200 rounded animate-pulse'></div>
+          </div>
+          <div className='space-y-4'>
+            <div className='h-4 bg-gray-200 rounded animate-pulse'></div>
+            <div className='h-4 bg-gray-200 rounded animate-pulse'></div>
+            <div className='h-4 bg-gray-200 rounded animate-pulse'></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function DocumentationPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <DocumentationContent />
+    </Suspense>
   );
 }

@@ -16,9 +16,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Map, BarChart3, Search } from "lucide-react";
 
 interface ContinentPageProps {
-  params: {
+  params: Promise<{
     continent: string;
-  };
+  }>;
 }
 
 export default function ContinentPage({ params }: ContinentPageProps) {
@@ -47,7 +47,14 @@ export default function ContinentPage({ params }: ContinentPageProps) {
     setColorMode,
   } = useDataContext();
 
-  const continentName = decodeURIComponent(params.continent);
+  const [continentName, setContinentName] = useState<string>("");
+
+  // Resolve params and set continent name
+  useEffect(() => {
+    params.then((resolvedParams) => {
+      setContinentName(decodeURIComponent(resolvedParams.continent));
+    });
+  }, [params]);
 
   // Local state for UI controls
   const [activeView, setActiveView] = useState<"map" | "timeseries">("map");
@@ -59,16 +66,19 @@ export default function ContinentPage({ params }: ContinentPageProps) {
 
   // Set the selected continent when the component mounts
   useEffect(() => {
-    setSelectedContinent(continentName);
+    if (continentName) {
+      setSelectedContinent(continentName);
 
-    // Cleanup when unmounting
-    return () => {
-      setSelectedContinent(null);
-    };
+      // Cleanup when unmounting
+      return () => {
+        setSelectedContinent(null);
+      };
+    }
   }, [continentName, setSelectedContinent]);
 
   // Filter data by the selected continent
   const continentData = useMemo(() => {
+    if (!continentName) return [];
     return filterByContinent(allData, continentName);
   }, [allData, continentName]);
 
